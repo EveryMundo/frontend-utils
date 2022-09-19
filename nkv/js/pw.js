@@ -116,10 +116,6 @@ _jol(function () {
         }
     }).fail(function () {
         // Call all handler function with no data (undefined).
-        for (var id in handlers) {
-            if (handlers.hasOwnProperty(id)) {
-                handlers[id]();
-            }
-        }
+
     });
 });
