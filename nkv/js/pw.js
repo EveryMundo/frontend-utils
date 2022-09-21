@@ -11,52 +11,84 @@ _jol(function () {
         return new Date(day + 'T00:00:00').format(fmt);
     }
 
+    function getDealMetadata(item){
+        var result = ' trfx-booking' +
+        ' data-oac="' + item.origin_airport_code + '"' +
+        ' data-dac="' + item.destination_airport_code + '"' +
+        ' data-departure-date="' + item.departure_date_standard + '"' +
+        ' data-travel-class="' + item.travel_class + '"' +
+        ' data-price="' + item.full_price + '"';
+
+        if (item.return_date) {
+            result = result + ' data-return-date="' + item.return_date_standard + '"';
+        }
+
+        result = result +
+            ' data-title="' + item.origin_city_name + ' ' + config.prepro_destination_place + ' ' + item.destination_city_name + '"' +
+            ' data-sub="' + config.dates_title + ': ' + item.departure_date_standard + (item.return_date ? ' - ' + item.return_date_standard : '') + '"' +
+            ' data-promo-code="' + (item.promo_code || '') + '"' +
+            ' data-site-edition="' + config.site_edition + '"' +
+            ' data-currency-code="' + item.currency_code;
+        return result;
+    }
+
+    function renderDealCard(item){
+        '<div class="offer" tabindex="0" role="button"' +
+        getDealMetadata(item)
+        '<div class="offer-description">' +
+        '<div>' +
+        '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
+        '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
+        '<div class="td offer-cell-trip-type">' + (item.return_date ? config.label_round_trip : config.label_one_way) + '</div>' +
+        '<div class="td offer-cell-dates">' +
+        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
+        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="offer-prices">' +
+        '<div>' +
+        '<div class="td offer-cell-price">' +
+        '<div class="offer--from">' + config.prepro_starting_price + '</div>' +
+        '<div class="offer--price--value">' + item.full_price + '*</div>' +
+        '<div class="offer--last-seen">' + lastSeenData.labelLastSeen + ' ' + item.price_last_seen.value + ' ' + lastSeenData.labelLastSeenUnits[item.price_last_seen.unit] + '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+    }
+
+    function renderDealRow(item){
+        var result = '';
+
+        result = result + 
+        '<tr class="offer"' + getDealMetadata(item) + '><td>' + 
+        '</td><td>' +
+        //item['hotel_name']
+        '</td><td>' +
+        //item['origin']
+        //item['destination']
+        '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
+        '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
+        '</td><td>' +
+        //item['departure']
+        //item['return']
+        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
+        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
+        '</td><td>' +
+        //item['price']
+        '<div class="offer--from">' + config.prepro_starting_price + '</div>' +
+        '<div class="offer--price--value">' + item.full_price + '*</div>' +
+        '<div class="offer--last-seen">' + lastSeenData.labelLastSeen + ' ' + item.price_last_seen.value + ' ' + lastSeenData.labelLastSeenUnits[item.price_last_seen.unit] + '</div>' +
+        '</td></tr>';
+        return result
+    }
     function getOffersMarkup(items, lastSeenData) {
         var result = '';
         for (var i = 0; i < items.length; i++) {
             var item = items[i];
-            result = result +
-                '<div class="offer" tabindex="0" role="button"' +
-                ' trfx-booking' +
-                ' data-oac="' + item.origin_airport_code + '"' +
-                ' data-dac="' + item.destination_airport_code + '"' +
-                ' data-departure-date="' + item.departure_date_standard + '"' +
-                ' data-travel-class="' + item.travel_class + '"' +
-                ' data-price="' + item.full_price + '"';
+            result = result + 
 
-            if (item.return_date) {
-                result = result +
-                    ' data-return-date="' + item.return_date_standard + '"';
-            }
-
-            result = result +
-                ' data-title="' + item.origin_city_name + ' ' + config.prepro_destination_place + ' ' + item.destination_city_name + '"' +
-                ' data-sub="' + config.dates_title + ': ' + item.departure_date_standard + (item.return_date ? ' - ' + item.return_date_standard : '') + '"' +
-                ' data-promo-code="' + (item.promo_code || '') + '"' +
-                ' data-site-edition="' + config.site_edition + '"' +
-                ' data-currency-code="' + item.currency_code + '">' +
-                '<div class="offer-description">' +
-                '<div>' +
-                '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
-                '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
-                '<div class="td offer-cell-trip-type">' + (item.return_date ? config.label_round_trip : config.label_one_way) + '</div>' +
-                '<div class="td offer-cell-dates">' +
-                '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
-                '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
-                '</div>' +
-                '</div>' +
-                '</div>' +
-                '<div class="offer-prices">' +
-                '<div>' +
-                '<div class="td offer-cell-price">' +
-                '<div class="offer--from">' + config.prepro_starting_price + '</div>' +
-                '<div class="offer--price--value">' + item.full_price + '*</div>' +
-                '<div class="offer--last-seen">' + lastSeenData.labelLastSeen + ' ' + item.price_last_seen.value + ' ' + lastSeenData.labelLastSeenUnits[item.price_last_seen.unit] + '</div>' +
-                '</div>' +
-                '</div>' +
-                '</div>' +
-
-                '</div>';
         }
         return result;
     }
@@ -108,6 +140,8 @@ _jol(function () {
     var endpoint = config.trfx_fixed_domain + '/trfx/api/data/' + config.site_edition + '/pricing_widgets.json?ids=' + ids.join(',');
 
     $.getJSON(endpoint, function (result) {
+        // delete BE data
+        
         // Call all widget handler functions.
         for (var id in handlers) {
             if (handlers.hasOwnProperty(id)) {
@@ -115,7 +149,8 @@ _jol(function () {
             }
         }
     }).fail(function () {
-        // Call all handler function with no data (undefined).
-
+        //render BE data
+        
+        //delete BE data
     });
 });
