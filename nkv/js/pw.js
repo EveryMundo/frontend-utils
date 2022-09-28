@@ -1,6 +1,6 @@
 
 _jol(function () {
-    var config = window._priceWidgetConfig;
+    var config = _priceWidgetConfig;
 
     var ids = [];
     var current_widget = {};
