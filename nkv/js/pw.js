@@ -1,16 +1,10 @@
 
 _jol(function () {
     var config = window._priceWidgetConfig;
-    var endpoint = config.trfx_fixed_domain + '/trfx/api/data/' + config.site_edition + '/pricing_widgets.json?ids=' + ids.join(',');
-    
-    // Maps price_widget id to handler function.
-    // The handler function takes the returned data from the API
-    // and updates the price_widget.
-    var handlers = [];
+
     var ids = [];
-
-
-
+    var current_widget = {};
+  
     function renderTable(pw_meta, items, labels){
         var result = '<table><thead>';
         result += 
@@ -57,6 +51,53 @@ _jol(function () {
         return result;
     }
     
+    function renderDealCard(item, classes){
+        return 
+        '<div class="' + classes + '"' + 'tabindex="0" role="button"' + getDealMetadata(item) + '/>' + 
+            '<div class="offer-description">' +
+                '<div>' +
+                    '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
+                    '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
+                    '<div class="td offer-cell-dates">' +
+                        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
+                        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="offer-prices">' +
+                renderPriceCell(item) +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderDealRow(item, classes){
+        var result = '';
+
+        result = result + 
+        '<tr class="' + classes + '"' + getDealMetadata(item) + '><td>' + 
+        '</td><td>' +
+        //item['hotel_name']
+        '</td><td>' +
+        '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
+        '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
+        '</td><td>' +
+        //item['departure']
+        //item['return']
+        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
+        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
+        '</td><td>' +
+            renderPriceCell(item) +
+        '</td></tr>';
+
+        return result(item)
+    }
+
+    function renderPriceCell(item){
+        return '<div class="offer--from">' + config.prepro_starting_price + '</div>' +
+        '<div class="offer--price--value' +  (isTable ? ' fs5' : ' fs3')  + '">' + item.full_price + '*</div>' +
+        '<div class="offer--last-seen">' + lastSeenData.labelLastSeen + ' ' + item.price_last_seen.value + ' ' + lastSeenData.labelLastSeenUnits[item.price_last_seen.unit] + '</div>';
+    }
+
     function getItemClasses(pw_meta, item_index){
         var classes  = 'offer';
         classes += pw_meta['module_type'] == 'HOTEL' ? ' pw-card-hotel' : ' pw-card-route';
@@ -90,60 +131,11 @@ _jol(function () {
         ' data-currency-code="' + item.currency_code;
     }
 
-    function renderDealCard(item, classes){
-        return 
-        '<div class="' + classes + '"' + 'tabindex="0" role="button"' + getDealMetadata(item) + '/>' + 
-            '<div class="offer-description">' +
-                '<div>' +
-                    '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
-                    '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
-                    '<div class="td offer-cell-trip-type">' + (item.return_date ? config.label_round_trip : config.label_one_way) + '</div>' +
-                    '<div class="td offer-cell-dates">' +
-                        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
-                        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="offer-prices">' +
-                '<div>' +
-                    renderPriceCell(item) +
-                '</div>' +
-            '</div>' +
-        '</div>';
-    }
-
-    function renderDealRow(item, classes){
-        var result = '';
-
-        result = result + 
-        '<tr class="' + classes + '"' + getDealMetadata(item) + '><td>' + 
-        '</td><td>' +
-        //item['hotel_name']
-        '</td><td>' +
-        '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
-        '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
-        '</td><td>' +
-        //item['departure']
-        //item['return']
-        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
-        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
-        '</td><td>' +
-            renderPriceCell(item) +
-        '</td></tr>';
-
-        return result(item)
-    }
-
-    function renderPriceCell(item){
-        return '<div class="offer--from">' + config.prepro_starting_price + '</div>' +
-        '<div class="offer--price--value' +  (isTable ? ' fs5' : ' fs3')  + '">' + item.full_price + '*</div>' +
-        '<div class="offer--last-seen">' + lastSeenData.labelLastSeen + ' ' + item.price_last_seen.value + ' ' + lastSeenData.labelLastSeenUnits[item.price_last_seen.unit] + '</div>';
-    }
     //todo
     $('.pw-view-more').on('click', function(){
         $(this).parent().children('.').addClass('');
         $(this).text = pw_labels['pw-show-less'];
-    })
+    });
 
     // Iterate through all price_widget elements in the page, that is,
     // all elements with a data-price-widget="..." attribute.
@@ -163,7 +155,7 @@ _jol(function () {
             }
         }
 
-        ids.push(id);
+        //ids.push(id);
         // Define a handler function for each price_widget.
         // We use a closure so that each function has access to the widget's id and
         // corresponding DOM root element.
@@ -178,32 +170,49 @@ _jol(function () {
                 var selector = '[data-price-widget="' + id + '"]';
                 document.querySelectorAll(selector).forEach(function (element) {
                     element.classList.remove("async");
-
                 });
             };
         })(id, this);
     });
 
-    // We're done if there are no widgets in the page.
-    if (!ids.length) {
-        return;
-    }
-
-    // Request data for all price widgets at once.
-    
-
-    $.getJSON(endpoint, function (result) {
-        // delete BE data
-        
-        // Call all widget handler functions.
-        for (var id in handlers) {
-            if (handlers.hasOwnProperty(id)) {
-                handlers[id](result && result[id] || undefined);
+    function renderWidgets(data, isRemote){
+        for(var id in ids){
+            //normalize data
+            current_widget[id] = id;
+            current_widget['metdata'] = isRemote ? data['metadata'][id] : getRemoteMeta(id);
+            current_widget['deals'] = isRemote ? data[id] : pricing_widgets['pricing-widget-' + id]['deals'];
+            current_widget['labels'] = config['labels'];
+            //render
+            if(current_widget['metdata']['visualization_type'] == 'TABLE'){
+                renderTable(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
+            }
+            if(current_widget['metdata']['visualization_type'] == 'GRID'){
+                renderGrid(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
+            }
+            if(current_widget['metdata']['visualization_type'] == 'CAROUSEL'){
+                renderCarousel(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
             }
         }
+    }
+
+    function getRemoteMeta(id){
+        const pw = pricing_widgets['pricing-widget-' + id];
+        return {
+            visualization_type: pw['fare_visualization_type'],
+            module_type: pw['module_type'],
+            include_images: pw['include_images']
+        }
+    }
+
+    $('[data-price-widget]').each(function () {
+        ids.push($(this).data('price-widget'));
+    });
+
+    var endpoint = config.trfx_fixed_domain + '/trfx/api/data/' + config.site_edition + '/pricing_widgets.json?ids=' + ids.join(',');
+
+    $.getJSON(endpoint, function (result) {
+        result && renderWidgets(result, true)
     }).fail(function () {
-        //render BE data
-        
-        //delete BE data
+        renderWidgets(pricing_widgets, false)
     });
 });
