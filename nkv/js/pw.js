@@ -4,6 +4,7 @@ _jol(function () {
 
     var ids = [];
     var current_widget = {};
+    var swipers = [];
   
     function renderTable(pw_meta, items, labels){
         var result = '<table><thead>';
@@ -59,8 +60,8 @@ _jol(function () {
                     '<div class="td offer-cell-origin">' + item.origin_city_name + '<abbr title="' + item.origin_city_name + '"> (' + item.origin_airport_code + ')</abbr></div>' +
                     '<div class="td offer-cell-destination">' + item.destination_city_name + '<abbr title="' + item.destination_city_name + '"> (' + item.destination_airport_code + ')</abbr></div>' +
                     '<div class="td offer-cell-dates">' +
-                        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
-                        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
+                        '<div>' + config.labels.departure_date + ' ' + item.departure_date_formated + '</div>' +
+                        '<div>' + (item.return_date ? config.labels.return_date + ' ' + item.return_date_formated : "") + '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
@@ -83,8 +84,8 @@ _jol(function () {
         '</td><td>' +
         //item['departure']
         //item['return']
-        '<div>' + config.label_departure_date + ' ' + item.departure_date_formated + '</div>' +
-        '<div>' + (item.return_date ? config.label_return_date + ' ' + item.return_date_formated : "") + '</div>' +
+        '<div>' + config.labels.departure_date + ' ' + item.departure_date_formated + '</div>' +
+        '<div>' + (item.return_date ? config.labels.return_date + ' ' + item.return_date_formated : "") + '</div>' +
         '</td><td>' +
             renderPriceCell(item) +
         '</td></tr>';
@@ -93,9 +94,9 @@ _jol(function () {
     }
 
     function renderPriceCell(item){
-        return '<div class="offer--from">' + config.prepro_starting_price + '</div>' +
+        return '<div class="offer--from">' + config.labels.prep_starting_price + '</div>' +
         '<div class="offer--price--value' +  (isTable ? ' fs5' : ' fs3')  + '">' + item.full_price + '*</div>' +
-        '<div class="offer--last-seen">' + lastSeenData.labelLastSeen + ' ' + item.price_last_seen.value + ' ' + lastSeenData.labelLastSeenUnits[item.price_last_seen.unit] + '</div>';
+        '<div class="offer--last-seen">' + config.labels.last_seen + ' ' + item.price_last_seen.value + ' ' + confid.labels['last_seen_' + item.price_last_seen.unit] + '</div>';
     }
 
     function getItemClasses(pw_meta, item_index){
@@ -124,7 +125,7 @@ _jol(function () {
         ' data-travel-class="' + item.travel_class + '"' +
         ' data-price="' + item.full_price + '"' +
         ' data-return-date="' + item.return_date_standard + '"'
-        ' data-title="' + item.origin_city_name + ' ' + config.prepro_destination_place + ' ' + item.destination_city_name + '"' +
+        ' data-title="' + item.origin_city_name + ' ' + config.labels.prep_destination_place + ' ' + item.destination_city_name + '"' +
         ' data-sub="' + config.dates_title + ': ' + item.departure_date_standard + (item.return_date ? ' - ' + item.return_date_standard : '') + '"' +
         ' data-promo-code="' + (item.promo_code || '') + '"' +
         ' data-site-edition="' + config.site_edition + '"' +
@@ -133,7 +134,7 @@ _jol(function () {
 
     //todo
     $('.pw-view-more').on('click', function(){
-        $(this).parent().children('.').addClass('');
+        $(this).parent('.price-widget-deals').children('.pw-hide').addClass('show');
         $(this).text = pw_labels['pw-show-less'];
     });
 
@@ -154,25 +155,6 @@ _jol(function () {
                 days: $(this).data('label-last-seen-days')
             }
         }
-
-        //ids.push(id);
-        // Define a handler function for each price_widget.
-        // We use a closure so that each function has access to the widget's id and
-        // corresponding DOM root element.
-        (function (id, rootNode) {
-            handlers[id] = function (data) {
-                // Check for 'undefined' because it means there is no data for the price_widget
-                // and it should be skipped altogether.
-                if (typeof data != 'undefined') {
-                    $('.tbody', rootNode).html(getOffersMarkup(data, lastSeenData));
-                }
-                $(rootNode).removeClass('async');
-                var selector = '[data-price-widget="' + id + '"]';
-                document.querySelectorAll(selector).forEach(function (element) {
-                    element.classList.remove("async");
-                });
-            };
-        })(id, this);
     });
 
     function renderWidgets(data, isRemote){
@@ -183,16 +165,63 @@ _jol(function () {
             current_widget['deals'] = isRemote ? data[id] : pricing_widgets['pricing-widget-' + id]['deals'];
             current_widget['labels'] = config['labels'];
             //render
+            var html = '';
             if(current_widget['metdata']['visualization_type'] == 'TABLE'){
-                renderTable(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
+                html = renderTable(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
             }
             if(current_widget['metdata']['visualization_type'] == 'GRID'){
-                renderGrid(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
+                html = renderGrid(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
             }
             if(current_widget['metdata']['visualization_type'] == 'CAROUSEL'){
-                renderCarousel(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
+                html = renderCarousel(current_widget['metdata'], current_widget['deals'], current_widget['labels']);
             }
+
+            var $widget = $('[data-price-widget="' + id + '"]');
+            //attach html
+            $widget.children('price-widget-deals').html(html);
+            //initialize js-comp if needed
+            if(current_widget['metdata']['visualization_type'] == 'CAROUSEL'){
+                initSwiper(id);
+            }
+            //remove placeholder
+            var selector = '[data-price-widget="' + id + '"]';
+            document.querySelectorAll(selector).forEach(function (element) {
+                element.classList.remove("async");
+            });
+
         }
+    }
+    function initSwiper(id){
+        swipers[id] = new Swiper(".swiper", {
+            spaceBetween: 30,
+    
+            breakpoints: {
+              420: {
+                slidesPerView: 1,
+                slidesPerGroup: 1
+              },
+              768: {
+                slidesPerView: 2,
+                slidesPerGroup: 2
+              },
+              980: {
+                slidesPerView: 3,
+                slidesPerGroup: 3
+              },
+              1200: {
+                slidesPerView: 4,
+                slidesPerGroup: 4
+              }
+            },
+            pagination: {
+              el: ".swiper-pagination",
+              clickable: true
+            },
+            navigation: {
+              nextEl: ".swiper-button-next",
+              prevEl: ".swiper-button-prev"
+            }
+          });            
     }
 
     function getRemoteMeta(id){
