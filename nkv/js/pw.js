@@ -105,16 +105,16 @@ _jol(function () {
     function getItemClasses(pw_meta, item_index){
         var classes  = 'offer';
         classes += pw_meta['module_type'] == 'HOTEL' ? ' pw-card-hotel' : ' pw-card-route';
-        if(pw_meta['viz_type'] !== 'TABLE' && item_index > 4){
+        if(pw_meta['visualization_type'] !== 'TABLE' && item_index > 4){
             classes += ' pw-hidden-card';
         }
-        if(pw_meta['viz_type'] !== 'GRID' && item_index > 8){
+        if(pw_meta['visualization_type'] !== 'GRID' && item_index > 8){
             classes += ' pw-hidden-card';
         }
-        if(pw_meta['viz_type'] !== 'CAROUSEL'){
+        if(pw_meta['visualization_type'] !== 'CAROUSEL'){
             classes += ' swiper-slide';
         }
-        if(pw_meta['viz_type'] !== 'TABLE' && pw_meta['include_imgs']){
+        if(pw_meta['visualization_type'] !== 'TABLE' && pw_meta['include_imgs']){
             classes += ' has-image';
         }
         return classes;
