@@ -68,6 +68,9 @@ _jol(function () {
             '<div class="offer-prices">' +
                 renderPriceCell(item) +
             '</div>' +
+            '<div class="cta-container">' +
+                '<button class="">' + config.labels['cta_booking'] + '</button>' +
+            '</div>' +
         '</div>';
     }
 
@@ -136,25 +139,6 @@ _jol(function () {
     $('.pw-view-more').on('click', function(){
         $(this).parent('.price-widget-deals').children('.pw-hide').addClass('show');
         $(this).text = pw_labels['pw-show-less'];
-    });
-
-    // Iterate through all price_widget elements in the page, that is,
-    // all elements with a data-price-widget="..." attribute.
-    $('[data-price-widget]').each(function () {
-        var id = $(this).data('price-widget');
-
-        var lastSeenData = {
-            enabled: $(this).data('last-seen'),
-            labelLastSeen: $(this).data('label-last-seen'),
-            labelLastSeenUnits: {
-                minute: $(this).data('label-last-seen-minute'),
-                minutes: $(this).data('label-last-seen-minutes'),
-                hour: $(this).data('label-last-seen-hour'),
-                hours: $(this).data('label-last-seen-hours'),
-                day: $(this).data('label-last-seen-day'),
-                days: $(this).data('label-last-seen-days')
-            }
-        }
     });
 
     function renderWidgets(data, isRemote){
